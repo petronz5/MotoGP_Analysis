@@ -1,32 +1,37 @@
 import pandas as pd
 
-def load_data(path="../data/RidersSummary.csv"):
+def load_data(filepath):
     """
-    Load dataset from CSV and return a pandas DataFrame
+    Carica il dataset MotoGP da un file CSV
+    Restituisce un DataFrame pandas
     """
-    df = pd.read_csv(path)
+    df = pd.read_csv(filepath)
     return df
 
-def stats_riders_by_country(df, top_n = 10):
+def get_wins_and_podiums(df, rider_name):
     """
-    return a DataFrame with the number of unique riders by country
+    Restituisce il numero di vittorie e podi di un pilota.
+    Una vittoria è pos. == '1', un podio è pos. in ['1', '2', '3'].
     """
-    # Raggruppiamo per nazione e contiamo i piloti unici
-    riders_by_country = (
-        df.groupby("home_country")["rider_name"]
-        .nunique()
-        .sort_values(ascending=False)
-        .head(top_n)
-    )
+    # Filtra solo le gare (session == 'Race')
+    races = df[df['session'] == 'Race']
+    # Filtra per pilota
+    rider_races = races[races['rider'] == rider_name]
+    # Conta vittorie
+    wins = (rider_races['pos.'] == '1').sum()
+    # Conta podi
+    podiums = rider_races[rider_races['pos.'].isin(['1', '2', '3'])].shape[0]
+    return wins, podiums
 
-    # Convertiamo in DataFrame con colonne leggibili
-    result = riders_by_country.reset_index()
-    result.columns = ["Country", "Unique Riders"]
-    
-    # Aggiungiamo un rank (posizione)
-    result.insert(0, "Rank", range(1, len(result) + 1))
-
-    # Calcoliamo la percentuale sul totale
-    total_riders = df["rider_name"].nunique() # Numero totale di piloti
-    result["Percentage"] = (result["Unique Riders"] / total_riders * 100).round(2) # Percentuale 
-    return result
+def get_riders_positions_by_race(df, rider1, rider2, session, year):
+    """
+    Restituisce un dataFrame con le posizioni dei due piloti per ogni gara
+    in una sessione e anno specifici
+    """
+    # Filtra per sessione e anno
+    races = df[(df['session'] == session) & (df['year'] == year)]
+    # Filtra per i due piloti
+    races = races[races['rider'].isin([rider1, rider2])]
+    # Pivot per avere le posizioni dei piloti per ogni gara
+    pivot = races.pivot_table(index=['event'], columns='rider', values='pos.', aggfunc='first')
+    return pivot
