@@ -1,0 +1,17 @@
+# Ambiente virtuale
+.venv/
+
+# Dati grezzi o sensibili
+data/
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Notebook checkpoint
+.ipynb_checkpoints/
+
+# File di sistema
+.DS_Store
